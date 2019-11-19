@@ -12,7 +12,9 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@types/btoa": "^1.2.3",
         "@types/node-fetch": "^2.5.3",
+        "btoa": "^1.2.1",
         "node-fetch": "^2.6.0",
         "typescript": "^3.7.2"
     }
