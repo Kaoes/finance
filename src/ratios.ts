@@ -34,15 +34,19 @@ export const invokeRatios = async (
     endDate: string,
     frequency: number | null
 ) => {
-    await fetchApi('/ratio/invoke', {
+    const res = await fetchApi('/ratio/invoke', {
         method: 'POST',
-        body: `
-            _ratio=${JSON.stringify(ratios)},
-            _asset=${JSON.stringify(assets)},
-            _bench=${bench},
-            _startDate=${startDate},
-            _endDate=${endDate},
-            _frequency=${frequency}
-        `
+        body: JSON.stringify({
+            ratio: ratios,
+            asset: assets,
+            bench: bench,
+            startDate: startDate,
+            endDate: endDate,
+            frequency: frequency
+        })
     });
+
+    const assets_ratios = await res.json();
+
+    return assets_ratios;
 };
