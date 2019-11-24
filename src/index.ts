@@ -4,18 +4,26 @@ import Quotes from './quotes';
 import { getRatios, invokeRatios } from './ratios';
 import { IDynAmount, IAssetValues, IAsset } from './interfaces';
 import { getWallet, updateWallet } from './portfolio';
+import * as readline from 'readline';
 
 const quantityStrategy = (a: IAsset, volatility: IAsset[]) => {
     const volatilityRank = volatility.findIndex(({ id }) => id === a.id) / volatility.length;
 
-    if (volatilityRank < 1 / 3) {
-        return 3;
-    } else if (volatilityRank < 2 / 3) {
-        return 2;
+    if (volatilityRank < 1 / 4) {
+        return 300;
+    } else if (volatilityRank < 2 / 4) {
+        return 250;
+    } else if (volatilityRank < 3 / 4) {
+        return 200;
     } else {
-        return 1;
+        return 150;
     }
 };
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
 // Entry main
 const main = async () => {
@@ -107,10 +115,12 @@ const main = async () => {
     assetsAvg.sort((a, b) => a[1] - b[1]);
 
     // Number of bought actions
-    const actions_nb = 20; // Must be even
+    const actions_nb = 30;
 
     // Create final arr
-    const sortedMatches: any[] = assetsAvg.map(arr => possibleMatches.find(({ id }) => id === arr[0])).slice(0, actions_nb);
+    const sortedMatches: any[] = assetsAvg
+        .map(arr => possibleMatches.find(({ id }) => id === arr[0]))
+        .slice(0, actions_nb);
 
     console.log('OK!\n');
 
@@ -119,7 +129,7 @@ const main = async () => {
     for (const m of sortedMatches) {
         valuesToBuy.push({
             asset: m.id,
-            quantity: quantityStrategy(m, sortedVolMatches)
+            quantity: quantityStrategy(m, sortedMatches)
         });
     }
 
@@ -137,22 +147,40 @@ const main = async () => {
     console.log('Updating wallet...');
     await updateWallet(wallet);
 
-    const compareRations = await invokeRatios(
-        [ID_SHARPE],
-        [WALLET_ID, WALLET_REF_ID],
-        null,
-        START_DATE,
-        END_DATE,
-        null
-    );
-
-    console.log('Wallet:', await getWallet());
-    console.log('Ratios');
-    console.log(compareRations);
+    console.log('OK!');
 
     // const quotesFor59 = await Quotes.getQuotesForAsset(1792, '2013-06-14', '2019-05-31');
 
     // const ratios = await getRatios();
 };
 
-main();
+console.log(' ___________________ ');
+console.log('|     FINANCE       |');
+console.log('| 1. Compute wallet |');
+console.log('| 2. Wallet state   |');
+console.log(' -------------------');
+console.log();
+
+rl.question('> ', async a => {
+    if (a === '1') {
+        await main();
+        rl.close();
+    } else if (a === '2') {
+        const compareRations = await invokeRatios(
+            [ID_SHARPE],
+            [WALLET_ID, WALLET_REF_ID],
+            null,
+            START_DATE,
+            END_DATE,
+            null
+        );
+
+        console.log('Wallet:', await getWallet());
+        console.log('Ratios');
+        console.log(compareRations);
+        rl.close();
+    } else {
+        rl.close();
+        console.log('Invalid choice.');
+    }
+});
